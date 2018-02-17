@@ -1,1 +1,1 @@
-The send review request module will send and email to the customer, who just bought an item, asking for a review.  You can set how many products links will be sent, as well as which order state to send the email at.
+The send review request module will send and email to the customer, who just bought an item, asking for a review.  You can set how many products links will be sent, as well as which order state to send the email at.  This module works with both the default productcomments module, as well as Datakick's revws module.
