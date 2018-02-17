@@ -1,0 +1,14 @@
+﻿[{shop_url}] 
+
+Hi {firstname} {lastname},
+
+Thank you for shopping with {shop_name}! 		 
+
+Once you have had the chance to try your products, you can make comments and give ratings for your products.
+This can be useful to other customers, hearing about your experience.
+
+{products}
+
+{shop_name} [{shop_url}] powered by
+thirty bees(tm) [https://thirtybees.com/]
+
