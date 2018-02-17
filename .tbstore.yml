@@ -1,0 +1,14 @@
+module_name: Send Review Request
+compatible_versions: 1.0.0+
+author: SLiCK-303
+category: administration
+tags:
+  - send review request
+  - review
+  - request
+  - send request
+description_short: The module send review request will send an email, after a person buys a product, asking for a review.
+description: description.md
+images:
+  - image-1.png
+license: AFL
