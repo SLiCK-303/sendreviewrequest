@@ -32,7 +32,7 @@ class SendReviewRequest extends Module
 	{
 		$this->name = 'sendreviewrequest';
 		$this->tab = 'emailing';
-		$this->version = '2.0.0';
+		$this->version = '2.0.1';
 		$this->author = 'SLiCK-303';
 		$this->need_instance = 0;
 
