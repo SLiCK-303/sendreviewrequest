@@ -11,4 +11,5 @@ description_short: The module send review request will send an email, after a pe
 description: description.md
 images:
   - image-1.png
+  - image-2.png
 license: AFL
