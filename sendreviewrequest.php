@@ -51,7 +51,8 @@ class SendReviewRequest extends Module
 			!$this->registerHook('header') ||
 			!$this->registerHook('actionOrderStatusPostUpdate') ||
 			!Configuration::updateValue('SENDREVIEWREQUEST', 5) ||
-			!Configuration::updateValue('SENDREVIEWREQUESTNBR', 5)
+			!Configuration::updateValue('SENDREVIEWREQUESTNBR', 5) ||
+			!Configuration::updateValue('SENDREVIEWREQUESTCOL', 1)
 		) {
 			return false;
 		}
@@ -63,6 +64,7 @@ class SendReviewRequest extends Module
 		if (!parent::uninstall() ||
 			!Configuration::deleteByName('SENDREVIEWREQUEST') ||
 			!Configuration::deleteByName('SENDREVIEWREQUESTNBR') ||
+			!Configuration::deleteByName('SENDREVIEWREQUESTCOL') ||
 			!$this->unregisterHook('header') ||
 			!$this->unregisterHook('actionOrderStatusPostUpdate')
 		) {
@@ -86,12 +88,17 @@ class SendReviewRequest extends Module
 			if (!Validate::isInt($state) || $state <= 0)
 				$errors[] = $this->l('The order state is invalid. Please choose an existing order state.');
 
+			$col = Tools::getValue('SENDREVIEWREQUESTCOL');
+			if (!Validate::isInt($col) || $col <= 0)
+				$errors[] = $this->l('The columns setting is invalid. Please choose an existing column number.');
+
 			if (isset($errors) && count($errors))
 				$output = $this->displayError(implode('<br />', $errors));
 			else
 			{
 				Configuration::updateValue('SENDREVIEWREQUESTNBR', (int)$nbr);
 				Configuration::updateValue('SENDREVIEWREQUEST', (int)$state);
+				Configuration::updateValue('SENDREVIEWREQUESTCOL', (int)$col);
 				$output = $this->displayConfirmation($this->l('Settings updated.'));
 			}
 		}
@@ -110,6 +117,7 @@ class SendReviewRequest extends Module
 		$id_order_state = (int)Tools::getValue('id_order_state');
 		$order_state = (int)Configuration::get('SENDREVIEWREQUEST');
 		$number_products = (int)Configuration::get('SENDREVIEWREQUESTNBR');
+		$number_columns = (int)Configuration::get('SENDREVIEWREQUESTCOL');
 
 		if($id_order_state == $order_state)
 		{
@@ -122,6 +130,9 @@ class SendReviewRequest extends Module
 			$products_list = '';
 			$np = 0;
 			$file_attachment = [];
+			if ($number_columns == 2) {
+				$products_list .= '<td><table width="100%">';
+			}
 			foreach($this->getProducts($order) as $review_product)
 			{
 				$np++;
@@ -131,12 +142,31 @@ class SendReviewRequest extends Module
 					$product_link = Context::getContext()->link-> getProductLink((int)$review_product['id_product'], $product->link_rewrite, $product->category, $product->ean13, $id_lang, (int)$order->id_shop, 0, true);
 					$image_url =  Context::getContext()->link->getImageLink($product->link_rewrite, $image['id_image'], 'small_default');
 					$file_attachment .= ['content' => $image_url, 'name' => $product->name, 'mime' => 'image/jpg'];
+					if (($np % 2) == 0 && $number_columns == 2) {
+						$products_list .= '<td>&nbsp;</td>';
+					}
+					if ($number_columns == 1) {
+						$products_list .= '<td>';
+					} else {
+						$products_list .= '<td><table width="100%">';
+					}
 					$products_list .=
-						'<tr style="background-color: '.($key % 2 ? '#DDE2E6' : '#EBECEE').';">
+						'<tr style="background-color: '.($np % 2 ? '#DDE2E6' : '#EBECEE').';">
 							<td style="padding: 0.6em 0.4em;width: 25%;text-align: center;"><img src="'.$image_url.'" title="'.$product->name.'" alt="'.$product->name.'" /></td>
 							<td style="padding: 0.6em 0.4em;width: 75%;text-align: left;"><strong><a href="'.$product_link.'#post_review" title="'.$this->l('Click to go to product page').'">'.$product->name.'</a></strong></td>
 						</tr>';
+					if ($number_columns == 1) {
+						$products_list .= '</td>';
+					} else {
+						$products_list .= '</table></td>';
+					}
+					if (($np % 2) == 0 && $number_columns == 2) {
+						$products_list .= '</tr><tr>';
+					}
 				}
+			}
+			if ($number_columns == 2) {
+				$products_list .= '</table></td>';
 			}
 
 			$data = [
@@ -221,6 +251,24 @@ class SendReviewRequest extends Module
 						],
 						'desc' => $this->l('Select the order status you want to send email (default: Delivered).'),
 					],
+                    [
+                        'type'   => 'radio',
+                        'label'  => $this->l('Columns'),
+                        'name'   => 'SENDREVIEWREQUESTCOL',
+                        'values' => [
+                            [
+                                'id'    => '1column',
+                                'value' => 1,
+                                'label' => $this->l('1 column'),
+                            ],
+                            [
+                                'id'    => '2columns',
+                                'value' => 2,
+                                'label' => $this->l('2 columns'),
+                            ],
+                        ],
+						'desc' => $this->l('Select the number of columns you\'d like products to display in email (default: 1).'),
+                    ],
 				],
 				'submit' => [
 					'title' => $this->l('Save'),
@@ -254,6 +302,7 @@ class SendReviewRequest extends Module
 		return [
 			'SENDREVIEWREQUEST' => Tools::getValue('SENDREVIEWREQUEST', (int)Configuration::get('SENDREVIEWREQUEST')),
 			'SENDREVIEWREQUESTNBR' => Tools::getValue('SENDREVIEWREQUESTNBR', (int)Configuration::get('SENDREVIEWREQUESTNBR')),
+			'SENDREVIEWREQUESTCOL' => Tools::getValue('SENDREVIEWREQUESTCOL', (int)Configuration::get('SENDREVIEWREQUESTCOL')),
 		];
 	}
 }
