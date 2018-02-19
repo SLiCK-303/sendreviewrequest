@@ -32,7 +32,7 @@ class SendReviewRequest extends Module
 	{
 		$this->name = 'sendreviewrequest';
 		$this->tab = 'emailing';
-		$this->version = '2.0.1';
+		$this->version = '2.0.2';
 		$this->author = 'SLiCK-303';
 		$this->need_instance = 0;
 
@@ -114,21 +114,30 @@ class SendReviewRequest extends Module
 
 	public function hookActionOrderStatusPostUpdate($params)
 	{
-		$id_order_state = (int)Tools::getValue('id_order_state');
-		$order_state = (int)Configuration::get('SENDREVIEWREQUEST');
-		$number_products = (int)Configuration::get('SENDREVIEWREQUESTNBR');
-		$number_columns = (int)Configuration::get('SENDREVIEWREQUESTCOL');
+		$id_order_state = (int) Tools::getValue('id_order_state');
+		$order_state = (int) Configuration::get('SENDREVIEWREQUEST');
+		$number_products = (int) Configuration::get('SENDREVIEWREQUESTNBR');
+		$number_columns = (int) Configuration::get('SENDREVIEWREQUESTCOL');
+		$shop_email = (string) Configuration::get('PS_SHOP_EMAIL');
+		$shop_name = (string) Configuration::get('PS_SHOP_NAME');
 
 		if($id_order_state == $order_state)
 		{
 			if ($context == null) {
 				$context = Context::getContext();
 			}
-			$id_order = Tools::getValue('id_order');
-			$order = new Order((int)$id_order);
+			$order = new Order($params['id_order']);
 			$id_lang = $order->id_lang;
 			$products_list = '';
 			$np = 0;
+			$customer = new Customer($order->id_customer);
+			if (Validate::isLoadedObject($customer)) {
+				$firstname = $customer->firstname;
+				$lastname = $customer->lastname;
+			} else {
+				$firstname = '';
+				$lastname = '';
+			}
 			$file_attachment = [];
 			if ($number_columns == 2) {
 				$products_list .= '<td><table width="100%">';
@@ -139,8 +148,8 @@ class SendReviewRequest extends Module
 				if ($np <= $number_products || $number_products == 0) {
 					$product = new Product((int)$review_product['id_product'], true, (int)$id_lang);
 					$image = Image::getCover((int)$review_product['id_product']);
-					$product_link = Context::getContext()->link-> getProductLink((int)$review_product['id_product'], $product->link_rewrite, $product->category, $product->ean13, $id_lang, (int)$order->id_shop, 0, true);
-					$image_url =  Context::getContext()->link->getImageLink($product->link_rewrite, $image['id_image'], 'small_default');
+					$product_link = $context->link->getProductLink((int)$review_product['id_product'], $product->link_rewrite, $product->category, $product->ean13, $id_lang, (int)$order->id_shop, 0, true);
+					$image_url =  $context->link->getImageLink($product->link_rewrite, $image['id_image'], 'small_default');
 					$file_attachment .= ['content' => $image_url, 'name' => $product->name, 'mime' => 'image/jpg'];
 					if (($np % 2) == 0 && $number_columns == 2) {
 						$products_list .= '<td>&nbsp;</td>';
@@ -169,19 +178,27 @@ class SendReviewRequest extends Module
 				$products_list .= '</table></td>';
 			}
 
-			$data = [
-				'{firstname}' => $this->context->customer->firstname,
-				'{lastname}' => $this->context->customer->lastname,
-				'{products}' => $this->formatProductForEmail($products_list)
+			$template_vars = [
+				'{firstname}' => $firstname,
+				'{lastname}'  => $lastname,
+				'{products}'  => $this->formatProductForEmail($products_list)
 			];
 
-			if (Validate::isEmail($this->context->customer->email))
+			if (Validate::isEmail($customer->email))
 				Mail::Send(
-					(int)$id_lang, 'post_review',
-					Mail::l('Send your reviews', (int)$id_lang),
-					$data, $this->context->customer->email,
-					$this->context->customer->firstname.' '.$this->context->customer->lastname,
-					$file_attachment, null, null, null, dirname(__FILE__).'/mails/', false, (int)$order->id_shop
+					(int)$id_lang,
+					'post_review',
+					sprintf(Mail::l('Send your reviews', (int)$id_lang)),
+					$template_vars,
+					($customer->email ? $customer->email : null),
+					($firstname ? $firstname.' '.$lastname : null),
+					$shop_email,
+					$shop_name,
+					$file_attachment,
+					null,
+					dirname(__FILE__).'/mails/',
+					false,
+					(int)$order->id_shop
 				);
 		}
 	}
