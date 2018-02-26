@@ -244,15 +244,15 @@ class SendReviewRequest extends Module
 			'form' => [
 				'legend' => [
 					'title' => $this->l('Settings'),
-					'icon' => 'icon-cogs'
+					'icon'  => 'icon-cogs'
 				],
 				'input' => [
 					[
-						'type' => 'text',
-						'label' => $this->l('Number of products'),
-						'name' => 'SENDREVIEWREQUESTNBR',
-						'class' => 'fixed-width-xs',
-						'desc' => $this->l('Set the number of products that you would like to display to customer (0 = all).'),
+						'type'    => 'text',
+						'label'   => $this->l('Number of products'),
+						'name'    => 'SENDREVIEWREQUESTNBR',
+						'class'   => 'fixed-width-xs',
+						'desc'    => $this->l('Set the number of products that you would like to display to customer (0 = all).'),
 					],
 					[
 						'type'    => 'select',
@@ -263,26 +263,26 @@ class SendReviewRequest extends Module
 							'id'    => 'id_order_state',
 							'name'  => 'name',
 						],
-						'desc' => $this->l('Select the order status you want to send email (default: Delivered).'),
+						'desc'    => $this->l('Select the order status you want to send email (default: Delivered).'),
 					],
-                    [
-                        'type'   => 'radio',
-                        'label'  => $this->l('Columns'),
-                        'name'   => 'SENDREVIEWREQUESTCOL',
-                        'values' => [
-                            [
-                                'id'    => '1column',
-                                'value' => 1,
-                                'label' => $this->l('1 column'),
-                            ],
-                            [
-                                'id'    => '2columns',
-                                'value' => 2,
-                                'label' => $this->l('2 columns'),
-                            ],
-                        ],
-						'desc' => $this->l('Select the number of columns you\'d like products to display in email (default: 1).'),
-                    ],
+					[
+						'type'    => 'radio',
+						'label'   => $this->l('Columns'),
+						'name'    => 'SENDREVIEWREQUESTCOL',
+						'values'  => [
+							[
+								'id'    => '1column',
+								'value' => 1,
+								'label' => $this->l('1 column'),
+							],
+							[
+								'id'    => '2columns',
+								'value' => 2,
+								'label' => $this->l('2 columns'),
+							],
+						],
+						'desc'    => $this->l('Select the number of columns you\'d like products to display in email (default: 1).'),
+					],
 				],
 				'submit' => [
 					'title' => $this->l('Save'),
@@ -314,7 +314,7 @@ class SendReviewRequest extends Module
 	public function getConfigFieldsValues()
 	{
 		return [
-			'SENDREVIEWREQUEST' => Tools::getValue('SENDREVIEWREQUEST', (int)Configuration::get('SENDREVIEWREQUEST')),
+			'SENDREVIEWREQUEST'    => Tools::getValue('SENDREVIEWREQUEST', (int)Configuration::get('SENDREVIEWREQUEST')),
 			'SENDREVIEWREQUESTNBR' => Tools::getValue('SENDREVIEWREQUESTNBR', (int)Configuration::get('SENDREVIEWREQUESTNBR')),
 			'SENDREVIEWREQUESTCOL' => Tools::getValue('SENDREVIEWREQUESTCOL', (int)Configuration::get('SENDREVIEWREQUESTCOL')),
 		];
