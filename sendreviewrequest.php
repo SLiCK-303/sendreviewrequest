@@ -27,7 +27,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.0.0';
+		$this->version = '3.0.1';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
@@ -38,7 +38,8 @@ class SendReviewRequest extends Module
 			'SEND_REVW_REQUEST_GROUP',
 			'SEND_REVW_REQUEST_NUMBER',
 			'SEND_REVW_REQUEST_COLUMNS',
-			'SEND_REVW_REQUEST_DAYS'
+			'SEND_REVW_REQUEST_DAYS',
+			'SEND_REVW_REQUEST_OLD',
 		];
 
 		$this->bootstrap = true;
@@ -59,11 +60,12 @@ class SendReviewRequest extends Module
 		if (!parent::install() ||
 			!$this->registerHook('header') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_ENABLE', 1) ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_STATE', 5) ||
+			!Configuration::updateValue('SEND_REVW_REQUEST_STATE', '4,5') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_GROUP', '3') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', 6) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', 2) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_DAYS', 7) ||
+			!Configuration::updateValue('SEND_REVW_REQUEST_OLD', 30) ||
 			!Db::getInstance()->execute('
 				CREATE TABLE '._DB_PREFIX_.'log_srr_email (
 				`id_log_email` int(11) NOT NULL AUTO_INCREMENT,
@@ -107,6 +109,7 @@ class SendReviewRequest extends Module
 				$html .= $this->displayConfirmation($this->l('Settings updated successfully'));
 			else
 				$html .= $this->displayError($this->l('Error occurred during settings update'));
+
 		}
 		$html .= $this->renderForm();
 		$html .= $this->renderStats();
@@ -168,28 +171,31 @@ class SendReviewRequest extends Module
 			'SEND_REVW_REQUEST_GROUP',
 			'SEND_REVW_REQUEST_NUMBER',
 			'SEND_REVW_REQUEST_COLUMNS',
-			'SEND_REVW_REQUEST_DAYS'
+			'SEND_REVW_REQUEST_DAYS',
+			'SEND_REVW_REQUEST_OLD',
 		]);
 
-		$order_state = (int) $conf['SEND_REVW_REQUEST_STATE'];
+		$order_state = implode(',', (array) $conf['SEND_REVW_REQUEST_STATE']);
 		$number_products = (int) $conf['SEND_REVW_REQUEST_NUMBER'];
 		$number_columns = (int) $conf['SEND_REVW_REQUEST_COLUMNS'];
 		$customer_group = implode(',', (array) $conf['SEND_REVW_REQUEST_GROUP']);
 		$days = (int) $conf['SEND_REVW_REQUEST_DAYS'];
+		$old = (int) $conf['SEND_REVW_REQUEST_OLD'];
 		$url = Tools::getCurrentUrlProtocolPrefix();
 
 		$email_logs = $this->getLogsEmail();
 
 		$sql = '
-			SELECT DISTINCT c.id_customer, c.id_shop, c.id_lang, c.firstname, c.lastname, c.email, o.id_order, oh.id_order_state
+			SELECT DISTINCT c.id_customer, c.id_shop, c.id_lang, c.firstname, c.lastname, c.email, o.id_order, o.current_state
 			FROM '._DB_PREFIX_.'customer c
 			LEFT JOIN '._DB_PREFIX_.'customer_group cg ON (c.id_customer = cg.id_customer)
 			LEFT JOIN '._DB_PREFIX_.'orders o ON (c.id_customer = o.id_customer)
-			LEFT JOIN '._DB_PREFIX_.'order_history oh ON (o.id_order = oh.id_order)
 			WHERE o.valid = 1
 			AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') <= DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)
+			AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') >= DATE_SUB(CURDATE(), INTERVAL '.$old.' DAY)
 			AND cg.id_group IN ('.$customer_group.')
-			AND oh.id_order_state = '.$order_state;
+			AND o.current_state IN ('.$order_state.')
+		';
 
 			$sql .= Shop::addSqlRestriction(Shop::SHARE_CUSTOMER, 'c');
 
@@ -387,15 +393,10 @@ class SendReviewRequest extends Module
 						],
 					],
 					[
-						'type'    => 'select',
+						'type'    => 'text',
 						'label'   => $this->l('Order state'),
 						'name'    => 'SEND_REVW_REQUEST_STATE',
-						'hint'    => $this->l('Select the order status you want to send email'),
-						'options' => [
-							'query' => array_merge(OrderState::getOrderStates((int) $this->context->language->id)),
-							'id'    => 'id_order_state',
-							'name'  => 'name',
-						],
+						'hint'    => $this->l('Enter your order state ids, separated by commas')
 					],
 					[
 						'type'    => 'text',
@@ -426,6 +427,13 @@ class SendReviewRequest extends Module
 						'label'   => $this->l('Send after'),
 						'name'    => 'SEND_REVW_REQUEST_DAYS',
 						'hint'    => $this->l('How many days to wait before request is sent'),
+						'suffix'  => $this->l('day(s)'),
+					],
+					[
+						'type'    => 'text',
+						'label'   => $this->l('Send before'),
+						'name'    => 'SEND_REVW_REQUEST_OLD',
+						'hint'    => $this->l('How many days old the orders can be before request is sent'),
 						'suffix'  => $this->l('day(s)'),
 					],
 					[
@@ -475,11 +483,12 @@ class SendReviewRequest extends Module
 	{
 		return [
 			'SEND_REVW_REQUEST_ENABLE'  => Tools::getValue('SEND_REVW_REQUEST_ENABLE', (int) Configuration::get('SEND_REVW_REQUEST_ENABLE')),
-			'SEND_REVW_REQUEST_STATE'   => Tools::getValue('SEND_REVW_REQUEST_STATE', (int) Configuration::get('SEND_REVW_REQUEST_STATE')),
+			'SEND_REVW_REQUEST_STATE'   => Tools::getValue('SEND_REVW_REQUEST_STATE', (string) Configuration::get('SEND_REVW_REQUEST_STATE')),
 			'SEND_REVW_REQUEST_GROUP'   => Tools::getValue('SEND_REVW_REQUEST_GROUP', (string) Configuration::get('SEND_REVW_REQUEST_GROUP')),
 			'SEND_REVW_REQUEST_NUMBER'  => Tools::getValue('SEND_REVW_REQUEST_NUMBER', (int) Configuration::get('SEND_REVW_REQUEST_NUMBER')),
 			'SEND_REVW_REQUEST_COLUMNS' => Tools::getValue('SEND_REVW_REQUEST_COLUMNS', (int) Configuration::get('SEND_REVW_REQUEST_COLUMNS')),
 			'SEND_REVW_REQUEST_DAYS'    => Tools::getValue('SEND_REVW_REQUEST_DAYS', (int) Configuration::get('SEND_REVW_REQUEST_DAYS')),
+			'SEND_REVW_REQUEST_OLD'     => Tools::getValue('SEND_REVW_REQUEST_OLD', (int) Configuration::get('SEND_REVW_REQUEST_OLD')),
 		];
 	}
 }
