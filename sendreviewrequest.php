@@ -27,10 +27,20 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.1.0';
+		$this->version = '3.2.0';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
+
+		$this->conf_keys = [
+			'SEND_REVW_REQUEST_ENABLE',
+			'SEND_REVW_REQUEST_STATE',
+			'SEND_REVW_REQUEST_GROUP',
+			'SEND_REVW_REQUEST_NUMBER',
+			'SEND_REVW_REQUEST_COLUMNS',
+			'SEND_REVW_REQUEST_DAYS',
+			'SEND_REVW_REQUEST_OLD',
+		];
 
 		$this->bootstrap = true;
 		parent::__construct();
@@ -74,87 +84,59 @@ class SendReviewRequest extends Module
 
 	public function uninstall()
 	{
-		if (!parent::uninstall() ||
-			!$this->unregisterHook('header') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_ENABLE') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_STATE') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_GROUP') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_NUMBER') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_COLUMNS') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_DAYS') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_OLD') ||
-			!Configuration::deleteByName('SEND_REVW_REQUEST_SECURE_KEY') ||
-			!Db::getInstance()->execute('DROP TABLE '._DB_PREFIX_.'log_srr_email')
-		) {
-			return false;
-		}
+		foreach ($this->conf_keys as $key)
+			Configuration::deleteByName($key);
 
-		return true;
+		Configuration::deleteByName('SEND_REVW_REQUEST_SECURE_KEY');
+		$this->unregisterHook('header');
+
+		Db::getInstance()->execute('DROP TABLE '._DB_PREFIX_.'log_srr_email');
+
+		return parent::uninstall();
 	}
 
 	public function getContent()
 	{
-		$output = '';
-		$errors = [];
+		$html = '';
+		/* Save settings */
 		if (Tools::isSubmit('submitSendReviewRequest'))
 		{
-			$enable = Tools::getValue('SEND_REVW_REQUEST_ENABLE');
-			if (!Validate::isInt($enable) || $enable <= 0)
-				$errors[] = $this->l('The enable state is invalid. Please choose an existing enable state.');
+			$ok = true;
+			foreach ($this->conf_keys as $c)
+				if(Tools::getValue($c) !== false) // Prevent saving when URL is wrong
+					$ok &= Configuration::updateValue($c, Tools::getValue($c));
 
-			$nbr = Tools::getValue('SEND_REVW_REQUEST_NUMBER');
-			if (!Validate::isInt($nbr) || $nbr < 0)
-				$errors[] = $this->l('The number of products is invalid. Please enter a positive number.');
-
-			$col = Tools::getValue('SEND_REVW_REQUEST_COLUMNS');
-			if (!Validate::isInt($col) || $col <= 0)
-				$errors[] = $this->l('The columns setting is invalid. Please choose an existing column number.');
-
-			$days = Tools::getValue('SEND_REVW_REQUEST_DAYS');
-			if (!Validate::isInt($days) || $days < 0)
-				$errors[] = $this->l('The days column is invalid. Please enter a number 0 or greater.');
-
-			$old = Tools::getValue('SEND_REVW_REQUEST_OLD');
-			if (!Validate::isInt($old) || $old < 0)
-				$errors[] = $this->l('The old column is invalid. Please enter a number 0 or greater.');
-
-			if (isset($errors) && count($errors))
-				$output = $this->displayError(implode('<br />', $errors));
-			else
-			{
-				Configuration::updateValue('SEND_REVW_REQUEST_ENABLE', (int)$enable);
-				Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', (int)$nbr);
-				Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', (int)$col);
-				Configuration::updateValue('SEND_REVW_REQUEST_DAYS', (int)$days);
-				Configuration::updateValue('SEND_REVW_REQUEST_OLD', (int)$old);
-
-				// Handling Order States
-				$orderStates = OrderState::getOrderStates($this->context->language->id);
-				$order_state_selected = [];
-				foreach ($orderStates as $orderState) {
-					$id_order_state = $orderState['id_order_state'];
-					if (Tools::isSubmit('SEND_REVW_REQUEST_STATE_'.$id_order_state)) {
-						$order_state_selected[] = $id_order_state;
-					}
+			// Handling Order States
+			$orderStates = OrderState::getOrderStates($this->context->language->id);
+			$order_state_selected = [];
+			foreach ($orderStates as $orderState) {
+				$id_order_state = $orderState['id_order_state'];
+				if (Tools::isSubmit('SEND_REVW_REQUEST_STATE_'.$id_order_state)) {
+					$order_state_selected[] = $id_order_state;
 				}
-				Configuration::updateValue('SEND_REVW_REQUEST_STATE', implode(',', $order_state_selected));
-
-				// Handling Groups
-				$groups = Group::getGroups($this->context->language->id);
-				$group_selected = [];
-				foreach ($groups as $group) {
-					$id_group = $group['id_group'];
-					if (Tools::isSubmit('SEND_REVW_REQUEST_GROUP_'.$id_group)) {
-						$group_selected[] = $id_group;
-					}
-				}
-				Configuration::updateValue('SEND_REVW_REQUEST_GROUP', implode(',', $group_selected));
-
-				$output = $this->displayConfirmation($this->l('Settings updated.'));
 			}
-		}
+			$ok &= Configuration::updateValue('SEND_REVW_REQUEST_STATE', implode(',', $order_state_selected));
 
-		return $output.$this->renderForm().$this->renderStats();
+			// Handling Groups
+			$groups = Group::getGroups($this->context->language->id);
+			$group_selected = [];
+			foreach ($groups as $group) {
+				$id_group = $group['id_group'];
+				if (Tools::isSubmit('SEND_REVW_REQUEST_GROUP_'.$id_group)) {
+					$group_selected[] = $id_group;
+				}
+			}
+			$ok &= Configuration::updateValue('SEND_REVW_REQUEST_GROUP', implode(',', $group_selected));
+
+			if ($ok)
+				$html .= $this->displayConfirmation($this->l('Settings updated successfully'));
+			else
+				$html .= $this->displayError($this->l('Error occurred during settings update'));
+		}
+		$html .= $this->renderForm();
+		$html .= $this->renderStats();
+
+		return $html;
 	}
 
 	/* Log each sent e-mail */
@@ -206,12 +188,21 @@ class SendReviewRequest extends Module
 	 */
 	private function sendReviewRequest($count = false)
 	{
-		$order_state = implode(',', (array)Configuration::get('SEND_REVW_REQUEST_STATE'));
-		$customer_group = implode(',', (array) Configuration::get('SEND_REVW_REQUEST_GROUP'));
-		$number_products = (int) Configuration::get('SEND_REVW_REQUEST_NUMBER');
-		$number_columns = (int) Configuration::get('SEND_REVW_REQUEST_COLUMNS');
-		$days = (int) Configuration::get('SEND_REVW_REQUEST_DAYS');
-		$old = (int) Configuration::get('SEND_REVW_REQUEST_OLD');
+		$conf = Configuration::getMultiple([
+			'SEND_REVW_REQUEST_STATE',
+			'SEND_REVW_REQUEST_GROUP',
+			'SEND_REVW_REQUEST_NUMBER',
+			'SEND_REVW_REQUEST_COLUMNS',
+			'SEND_REVW_REQUEST_DAYS',
+			'SEND_REVW_REQUEST_OLD',
+		]);
+
+		$order_state = implode(',', (array) $conf['SEND_REVW_REQUEST_STATE']);
+		$customer_group = implode(',', (array) $conf['SEND_REVW_REQUEST_GROUP']);
+		$number_products = (int) $conf['SEND_REVW_REQUEST_NUMBER'];
+		$number_columns = (int) $conf['SEND_REVW_REQUEST_COLUMNS'];
+		$days = (int) $conf['SEND_REVW_REQUEST_DAYS'];
+		$old = (int) $conf['SEND_REVW_REQUEST_OLD'];
 		$url = Tools::getCurrentUrlProtocolPrefix();
 
 		$email_logs = $this->getLogsEmail();
