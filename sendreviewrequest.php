@@ -27,13 +27,12 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.2.1';
+		$this->version = '3.2.2';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
 
 		$this->conf_keys = [
-			'SEND_REVW_REQUEST_ENABLE',
 			'SEND_REVW_REQUEST_STATE',
 			'SEND_REVW_REQUEST_GROUP',
 			'SEND_REVW_REQUEST_NUMBER',
@@ -59,7 +58,6 @@ class SendReviewRequest extends Module
 	{
 		if (!parent::install() ||
 			!$this->registerHook('header') ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_ENABLE', 1) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_STATE', '5,4') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_GROUP', '3') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', 6) ||
@@ -322,10 +320,7 @@ class SendReviewRequest extends Module
 	public function cronTask()
 	{
 		Context::getContext()->link = new Link(); //when this is call by cron context is not init
-		$enabled = (int) Configuration::get('SEND_REVW_REQUEST_ENABLE');
-		if ($enabled) {
-			$this->sendReviewRequest();
-		}
+		$this->sendReviewRequest();
 	}
 
 	public function renderStats()
@@ -420,25 +415,6 @@ class SendReviewRequest extends Module
 					'icon'  => 'icon-cogs',
 				],
 				'input' => [
-					[
-						'type'    => 'switch',
-						'label'   => $this->l('Enable'),
-						'name'    => 'SEND_REVW_REQUEST_ENABLE',
-						'hint'    => $this->l('Activate sending of review request message'),
-						'is_bool' => true,
-						'values'  => [
-							[
-								'id'      => 'active_on',
-								'value'   => 1,
-								'label'   => $this->l('Enabled'),
-							],
-							[
-								'id'      => 'active_off',
-								'value'   => 0,
-								'label'   => $this->l('Disabled'),
-							],
-						],
-					],
 					[
 						'type'     => 'checkbox',
 						'label'    => $this->l('Order State'),
@@ -539,7 +515,6 @@ class SendReviewRequest extends Module
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
 
-		$vars['SEND_REVW_REQUEST_ENABLE'] = (int) Configuration::get('SEND_REVW_REQUEST_ENABLE');
 		$vars['SEND_REVW_REQUEST_STATE'] = (array) Configuration::get('SEND_REVW_REQUEST_STATE');
 		$vars['SEND_REVW_REQUEST_GROUP'] = (array) Configuration::get('SEND_REVW_REQUEST_GROUP');
 		$vars['SEND_REVW_REQUEST_NUMBER'] = (int) Configuration::get('SEND_REVW_REQUEST_NUMBER');
