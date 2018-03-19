@@ -119,7 +119,7 @@ class SendReviewRequest extends Module
 					$order_state_selected[] = $id_order_state;
 				}
 			}
-			if (is_null($order_state_selected[0])) {
+			if (empty($order_state_selected[0])) {
 				$ok = false;
 			} else {
 				$ok &= Configuration::updateValue('SEND_REVW_REQUEST_STATE', implode(',', $order_state_selected));
@@ -134,7 +134,7 @@ class SendReviewRequest extends Module
 					$group_selected[] = $id_group;
 				}
 			}
-			if (is_null($group_selected[0])) {
+			if (empty($group_selected[0])) {
 				$ok = false;
 			} else {
 				$ok &= Configuration::updateValue('SEND_REVW_REQUEST_GROUP', implode(',', $group_selected));
@@ -387,7 +387,11 @@ class SendReviewRequest extends Module
 
 		$groups = Group::getGroups($id_lang);
 		$visitorGroup = Configuration::get('PS_UNIDENTIFIED_GROUP');
-		$guestGroup = Configuration::get('PS_GUEST_GROUP');
+		if (Configuration::get('PS_GUEST_CHECKOUT_ENABLED')) {
+			$guestGroup = '';
+		} else {
+			$guestGroup = Configuration::get('PS_GUEST_GROUP');
+		}
 		foreach ($groups as $key => $g) {
 			if (in_array($g['id_group'], [$visitorGroup, $guestGroup])) {
 				unset($groups[$key]);
