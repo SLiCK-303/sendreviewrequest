@@ -259,7 +259,7 @@ class SendReviewRequest extends Module
 
 				foreach($order->getProducts() as $review_product) {
 					$np++;
-					if ($np <= $number_products || !empty($number_products)) {
+					if ($np <= $number_products || $number_products == 0) {
 						$product = new Product((int)$review_product['id_product'], false, $id_lang);
 						$image = Image::getCover((int)$review_product['id_product']);
 						$product_link = $this->context->link->getProductLink((int)$review_product['id_product'], $product->link_rewrite, $product->category, $product->ean13, $id_lang, (int)$order->id_shop, 0, true);
