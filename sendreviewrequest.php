@@ -27,7 +27,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.2.3';
+		$this->version = '3.2.4';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
@@ -60,7 +60,7 @@ class SendReviewRequest extends Module
 			!$this->registerHook('header') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_STATE', '5,4') ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_GROUP', '3') ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', 6) ||
+			!Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', 8) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', 2) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_DAYS', 7) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_OLD', 30) ||
@@ -228,16 +228,22 @@ class SendReviewRequest extends Module
 			LEFT JOIN '._DB_PREFIX_.'customer_group cg ON (c.id_customer = cg.id_customer)
 			LEFT JOIN '._DB_PREFIX_.'orders o ON (c.id_customer = o.id_customer)
 			WHERE o.valid = 1
-			AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') <= DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)
-			AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') >= DATE_SUB(CURDATE(), INTERVAL '.$old.' DAY)
 			AND cg.id_group IN ('.$customer_group.')
 			AND o.current_state IN ('.$order_state.')
 		';
 
 		$sql .= Shop::addSqlRestriction(Shop::SHARE_CUSTOMER, 'c');
 
+		if (!empty($days)) {
+			$sql .= ' AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') <= DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)';
+		}
+
+		if (!empty($old)) {
+			$sql .= ' AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') >= DATE_SUB(CURDATE(), INTERVAL '.$old.' DAY)';
+		}
+
 		if (!empty($email_logs)) {
-			$sql .= ' AND o.id_order NOT IN ('.join(',', $email_logs).') ';
+			$sql .= ' AND o.id_order NOT IN ('.join(',', $email_logs).')';
 		}
 
 		$emails = Db::getInstance()->executeS($sql);
@@ -419,7 +425,7 @@ class SendReviewRequest extends Module
 						'type'     => 'checkbox',
 						'label'    => $this->l('Order State'),
 						'name'     => 'SEND_REVW_REQUEST_STATE',
-						'hint'     => $this->l('Select the order status you want to send email'),
+						'hint'     => $this->l('Orders need to be in this state/s for the email to be sent'),
 						'multiple' => true,
 						'values'   => [
 							'query' => $orderStates,
@@ -437,13 +443,13 @@ class SendReviewRequest extends Module
 						'type'    => 'text',
 						'label'   => $this->l('Number of products'),
 						'name'    => 'SEND_REVW_REQUEST_NUMBER',
-						'hint'    => $this->l('Set the number of products you would like to display to customer (0 = all)'),
+						'hint'    => $this->l('Set the number of products you would like to display in the email (0 = all)'),
 					],
 					[
 						'type'    => 'radio',
 						'label'   => $this->l('Columns'),
 						'name'    => 'SEND_REVW_REQUEST_COLUMNS',
-						'hint'    => $this->l('Select the number of columns you\'d like the products to display in the email'),
+						'hint'    => $this->l('Select the number of columns of products to display in the email'),
 						'values'  => [
 							[
 								'id'    => '1column',
@@ -461,21 +467,21 @@ class SendReviewRequest extends Module
 						'type'    => 'text',
 						'label'   => $this->l('Send after'),
 						'name'    => 'SEND_REVW_REQUEST_DAYS',
-						'hint'    => $this->l('How many days to wait before request is sent'),
+						'hint'    => $this->l('Send request AFTER order is this old (0 = now)'),
 						'suffix'  => $this->l('day(s)'),
 					],
 					[
 						'type'    => 'text',
 						'label'   => $this->l('Send before'),
 						'name'    => 'SEND_REVW_REQUEST_OLD',
-						'hint'    => $this->l('How many days old the orders can be before request is sent'),
+						'hint'    => $this->l('Send request BEFORE order is this old (0 = forever)'),
 						'suffix'  => $this->l('day(s)'),
 					],
 					[
 						'type'     => 'checkbox',
 						'label'    => $this->l('Group access'),
 						'name'     => 'SEND_REVW_REQUEST_GROUP',
-						'hint'     => $this->l('Select the groups you want to send emails to'),
+						'hint'     => $this->l('Select the group/s you want to send emails to'),
 						'multiple' => true,
 						'values'   => [
 							'query' => $groups,
