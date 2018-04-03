@@ -19,9 +19,6 @@ if (!defined('_TB_VERSION_')) {
 	exit;
 }
 
-/**
- * Class SendReviewRequest
- */
 class SendReviewRequest extends Module
 {
 	public function __construct()
@@ -99,8 +96,7 @@ class SendReviewRequest extends Module
 	{
 		$html = '';
 		/* Save settings */
-		if (Tools::isSubmit('submitSendReviewRequest'))
-		{
+		if (Tools::isSubmit('submitSendReviewRequest')) {
 			$ok = true;
 			foreach ($this->conf_keys as $c) {
 				if (Tools::getValue($c) !== false) { // Prevent saving when URL is wrong
@@ -151,7 +147,6 @@ class SendReviewRequest extends Module
 		return $html;
 	}
 
-	/* Log each sent e-mail */
 	private function logEmail($id_order, $id_customer = null)
 	{
 		$values = [
@@ -194,13 +189,6 @@ class SendReviewRequest extends Module
 		return $content;
 	}
 	
-	/**
-	 * sendReviewRequest send emails to all customers with a specific order status
-	 *
-	 * @param boolean $count if set to true, will return number of customer (default : false, will send mails, no return value)
-	 *
-	 * @return void
-	 */
 	private function sendReviewRequest($count = false)
 	{
 		$conf = Configuration::getMultiple([
