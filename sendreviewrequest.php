@@ -24,7 +24,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.2.4';
+		$this->version = '3.2.5';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
@@ -211,10 +211,10 @@ class SendReviewRequest extends Module
 		$email_logs = $this->getLogsEmail();
 
 		$sql = '
-			SELECT DISTINCT c.id_customer, c.id_shop, c.id_lang, c.firstname, c.lastname, c.email, o.id_order, o.current_state
+			SELECT c.id_customer, c.id_shop, c.id_lang, c.firstname, c.lastname, c.email, o.id_order, o.current_state
 			FROM '._DB_PREFIX_.'customer c
-			LEFT JOIN '._DB_PREFIX_.'customer_group cg ON (c.id_customer = cg.id_customer)
-			LEFT JOIN '._DB_PREFIX_.'orders o ON (c.id_customer = o.id_customer)
+			LEFT JOIN '._DB_PREFIX_.'customer_group cg ON c.id_customer = cg.id_customer
+			LEFT JOIN '._DB_PREFIX_.'orders o ON c.id_customer = o.id_customer
 			WHERE o.valid = 1
 			AND cg.id_group IN ('.$customer_group.')
 			AND o.current_state IN ('.$order_state.')
@@ -223,11 +223,11 @@ class SendReviewRequest extends Module
 		$sql .= Shop::addSqlRestriction(Shop::SHARE_CUSTOMER, 'c');
 
 		if (!empty($days)) {
-			$sql .= ' AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') <= DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)';
+			$sql .= ' AND DATE_FORMAT(o.date_upd, \'%Y-%m-%d\') < DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)';
 		}
 
 		if (!empty($old)) {
-			$sql .= ' AND DATE_FORMAT(o.date_add, \'%Y-%m-%d\') >= DATE_SUB(CURDATE(), INTERVAL '.$old.' DAY)';
+			$sql .= ' AND DATE_FORMAT(o.date_upd, \'%Y-%m-%d\') > DATE_SUB(CURDATE(), INTERVAL '.$old.' DAY)';
 		}
 
 		if (!empty($email_logs)) {
