@@ -24,7 +24,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.2.5';
+		$this->version = '3.2.6';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
@@ -286,25 +286,57 @@ class SendReviewRequest extends Module
 					$products_list .= '</table></td>';
 				}
 
-				$template_vars = [
-					'{email}'     => $email['email'],
-					'{lastname}'  => $email['lastname'],
-					'{firstname}' => $email['firstname'],
-					'{products}'  => $this->formatProductForEmail($products_list)
-				];
+				// Trigger the Krona Action
+				if (Module::isEnabled('genzo_krona')) {
+					$gk_params = [
+						'module_name' => 'revws',
+						'action_name' => 'review_created',
+						'id_customer' => (int)$email['id_customer'],
+					];
+					$action = Hook::exec('displayKronaActionPoints', $gk_params, null, true, false);
 
-				Mail::Send(
-					(int)$id_lang,
-					'post_review',
-					Mail::l('Send your reviews', $id_lang),
-					$template_vars,
-					$email['email'],
-					$email['firstname'].' '.$email['lastname'],
-					null,
-					null,
-					null,
-					null,
-					dirname(__FILE__).'/mails/');
+					$template_vars = [
+						'{email}'     => $email['email'],
+						'{lastname}'  => $email['lastname'],
+						'{firstname}' => $email['firstname'],
+						'{products}'  => $this->formatProductForEmail($products_list),
+						'{points}'    => $action['genzo_krona']['points'],
+					];
+
+					Mail::Send(
+						(int)$id_lang,
+						'post_review_krona',
+						Mail::l('Send your reviews', $id_lang),
+						$template_vars,
+						$email['email'],
+						$email['firstname'].' '.$email['lastname'],
+						null,
+						null,
+						null,
+						null,
+						dirname(__FILE__).'/mails/');
+				} else {
+					$template_vars = [
+						'{email}'     => $email['email'],
+						'{lastname}'  => $email['lastname'],
+						'{firstname}' => $email['firstname'],
+						'{products}'  => $this->formatProductForEmail($products_list),
+					];
+
+					Mail::Send(
+						(int)$id_lang,
+						'post_review',
+						Mail::l('Send your reviews', $id_lang),
+						$template_vars,
+						$email['email'],
+						$email['firstname'].' '.$email['lastname'],
+						null,
+						null,
+						null,
+						null,
+						dirname(__FILE__).'/mails/');
+				}
+
 
 				$this->logEmail((int)$email['id_order'], (int)$email['id_customer']);
 			}
