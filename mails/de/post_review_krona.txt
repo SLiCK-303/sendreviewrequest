@@ -4,7 +4,7 @@ Hallo {firstname} {lastname},
 
 Vielen Dank für den Einkauf bei {shop_name}! 		 
 
-Sobald Sie Ihre Produkte testen konnten, können Sie Kommentare und Bewertungen für Ihre bestellten Produkte abgeben. Dies kann für andere Kunden hilfreich sein, wenn Sie von Ihrer Erfahrung hören.  Sie erhalten {points} Punkte für jede eingereichte Bewertung.
+Sobald Sie Ihre Produkte testen konnten, können Sie Kommentare und Bewertungen für Ihre bestellten Produkte abgeben. Dies kann für andere Kunden hilfreich sein, wenn Sie von Ihrer Erfahrung hören.  Sie erhalten {points} Punkte für jede erfolgreich eingereichte Bewertung.
 
 {products}
 
