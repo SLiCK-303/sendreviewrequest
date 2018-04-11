@@ -1,0 +1,13 @@
+﻿[{shop_url}] 
+
+Hallo {firstname} {lastname},
+
+Vielen Dank für den Einkauf bei {shop_name}! 		 
+
+Sobald Sie Ihre Produkte testen konnten, können Sie Kommentare und Bewertungen für Ihre bestellten Produkte abgeben. Dies kann für andere Kunden hilfreich sein, wenn Sie von Ihrer Erfahrung hören.  Sie erhalten {points} Punkte für jede eingereichte Bewertung.
+
+{products}
+
+{shop_name} [{shop_url}] powered by
+thirty bees(tm) [https://thirtybees.com/]
+
