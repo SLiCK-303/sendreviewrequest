@@ -24,7 +24,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.2.6';
+		$this->version = '3.2.7';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
@@ -36,6 +36,7 @@ class SendReviewRequest extends Module
 			'SEND_REVW_REQUEST_COLUMNS',
 			'SEND_REVW_REQUEST_DAYS',
 			'SEND_REVW_REQUEST_OLD',
+			'SEND_REVW_REQUEST_ACTION',
 		];
 
 		$this->bootstrap = true;
@@ -61,6 +62,7 @@ class SendReviewRequest extends Module
 			!Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', 2) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_DAYS', 7) ||
 			!Configuration::updateValue('SEND_REVW_REQUEST_OLD', 30) ||
+			!Configuration::updateValue('SEND_REVW_REQUEST_ACTION', 1) ||
 			!Db::getInstance()->execute('
 				CREATE TABLE '._DB_PREFIX_.'log_srr_email (
 				`id_log_email` int(11) NOT NULL AUTO_INCREMENT,
@@ -198,6 +200,7 @@ class SendReviewRequest extends Module
 			'SEND_REVW_REQUEST_COLUMNS',
 			'SEND_REVW_REQUEST_DAYS',
 			'SEND_REVW_REQUEST_OLD',
+			'SEND_REVW_REQUEST_ACTION',
 		]);
 
 		$order_state = implode(',', (array) $conf['SEND_REVW_REQUEST_STATE']);
@@ -206,6 +209,12 @@ class SendReviewRequest extends Module
 		$number_columns = (int) $conf['SEND_REVW_REQUEST_COLUMNS'];
 		$days = (int) $conf['SEND_REVW_REQUEST_DAYS'];
 		$old = (int) $conf['SEND_REVW_REQUEST_OLD'];
+		$revws_act = (int) $conf['SEND_REVW_REQUEST_ACTION'];
+		if ($revws_act == 1) {
+			$revws_action = 'review_created';
+		} else {
+			$revws_action = 'review_approved';
+		}
 		$url = Tools::getCurrentUrlProtocolPrefix();
 
 		$email_logs = $this->getLogsEmail();
@@ -290,7 +299,7 @@ class SendReviewRequest extends Module
 				if (Module::isEnabled('genzo_krona') && Module::isEnabled('revws')) {
 					$gk_params = [
 						'module_name' => 'revws',
-						'action_name' => 'review_created',
+						'action_name' => $revws_action,
 						'id_customer' => (int)$email['id_customer'],
 					];
 					$action = Hook::exec('displayKronaActionPoints', $gk_params, null, true, false);
@@ -434,93 +443,113 @@ class SendReviewRequest extends Module
 			],
 		];
 
+		$inputs[] = [
+			'type'     => 'checkbox',
+			'label'    => $this->l('Order State'),
+			'name'     => 'SEND_REVW_REQUEST_STATE',
+			'hint'     => $this->l('Orders need to be in this state/s for the email to be sent'),
+			'multiple' => true,
+			'values'   => [
+				'query' => $orderStates,
+				'id'    => 'id_order_state',
+				'name'  => 'name',
+			],
+			'expand'   => (count($orderStates) > 10) ? [
+				'print_total' => count($orderStates),
+				'default'     => 'show',
+				'show'        => ['text' => $this->l('Show'), 'icon' => 'plus-sign-alt'],
+				'hide'        => ['text' => $this->l('Hide'), 'icon' => 'minus-sign-alt'],
+			] : null,
+		];
+		$inputs[] = [
+			'type'     => 'text',
+			'label'    => $this->l('Number of products'),
+			'name'     => 'SEND_REVW_REQUEST_NUMBER',
+			'hint'     => $this->l('Set the number of products you would like to display in the email (0 = all)'),
+		];
+		$inputs[] = [
+			'type'     => 'radio',
+			'label'    => $this->l('Columns'),
+			'name'     => 'SEND_REVW_REQUEST_COLUMNS',
+			'hint'     => $this->l('Select the number of columns of products to display in the email'),
+			'values'   => [
+				[
+					'id'    => '1column',
+					'value' => 1,
+					'label' => $this->l('1 column'),
+				],
+				[
+					'id'    => '2columns',
+					'value' => 2,
+					'label' => $this->l('2 columns'),
+				],
+			],
+		];
+		$inputs[] = [
+			'type'     => 'text',
+			'label'    => $this->l('Send after'),
+			'name'     => 'SEND_REVW_REQUEST_DAYS',
+			'hint'     => $this->l('Send request AFTER order is this old (0 = now)'),
+			'suffix'   => $this->l('day(s)'),
+		];
+		$inputs[] = [
+			'type'     => 'text',
+			'label'    => $this->l('Send before'),
+			'name'     => 'SEND_REVW_REQUEST_OLD',
+			'hint'     => $this->l('Send request BEFORE order is this old (0 = forever)'),
+			'suffix'   => $this->l('day(s)'),
+		];
+		$inputs[] = [
+			'type'     => 'checkbox',
+			'label'    => $this->l('Group access'),
+			'name'     => 'SEND_REVW_REQUEST_GROUP',
+			'hint'     => $this->l('Select the group/s you want to send emails to'),
+			'multiple' => true,
+			'values'   => [
+				'query' => $groups,
+				'id'    => 'id_group',
+				'name'  => 'name',
+			],
+			'expand'   => (count($groups) > 3) ? [
+				'print_total' => count($groups),
+				'default'     => 'show',
+				'show'        => ['text' => $this->l('Show'), 'icon' => 'plus-sign-alt'],
+				'hide'        => ['text' => $this->l('Hide'), 'icon' => 'minus-sign-alt'],
+			] : null,
+		];
+		if (Module::isEnabled('genzo_krona') && Module::isEnabled('revws')) {
+			$inputs[] = [
+				'type'    => 'radio',
+				'label'   => $this->l('Krona revws action'),
+				'name'    => 'SEND_REVW_REQUEST_ACTION',
+				'hint'    => $this->l('Select which Revws action to use for Krona'),
+				'values'  => [
+					[
+						'id'    => 'review_created',
+						'value' => 1,
+						'label' => $this->l('review_created'),
+					],
+					[
+						'id'    => 'review_approved',
+						'value' => 2,
+						'label' => $this->l('review_approved'),
+					],
+				],
+			];
+		}
+		$inputs[] = [
+			'type'    => 'desc',
+			'name'    => '',
+			'text'    => sprintf($this->l('Next process will send: %d e-mail(s)'), $r1),
+		];
+
 		$fields_form_2 = [
 			'form' => [
 				'legend' => [
 					'title' => $this->l('E-Mails to send'),
 					'icon'  => 'icon-cogs',
 				],
-				'input' => [
-					[
-						'type'     => 'checkbox',
-						'label'    => $this->l('Order State'),
-						'name'     => 'SEND_REVW_REQUEST_STATE',
-						'hint'     => $this->l('Orders need to be in this state/s for the email to be sent'),
-						'multiple' => true,
-						'values'   => [
-							'query' => $orderStates,
-							'id'    => 'id_order_state',
-							'name'  => 'name',
-						],
-						'expand'   => (count($orderStates) > 10) ? [
-							'print_total' => count($orderStates),
-							'default'     => 'show',
-							'show'        => ['text' => $this->l('Show'), 'icon' => 'plus-sign-alt'],
-							'hide'        => ['text' => $this->l('Hide'), 'icon' => 'minus-sign-alt'],
-						] : null,
-					],
-					[
-						'type'    => 'text',
-						'label'   => $this->l('Number of products'),
-						'name'    => 'SEND_REVW_REQUEST_NUMBER',
-						'hint'    => $this->l('Set the number of products you would like to display in the email (0 = all)'),
-					],
-					[
-						'type'    => 'radio',
-						'label'   => $this->l('Columns'),
-						'name'    => 'SEND_REVW_REQUEST_COLUMNS',
-						'hint'    => $this->l('Select the number of columns of products to display in the email'),
-						'values'  => [
-							[
-								'id'    => '1column',
-								'value' => 1,
-								'label' => $this->l('1 column'),
-							],
-							[
-								'id'    => '2columns',
-								'value' => 2,
-								'label' => $this->l('2 columns'),
-							],
-						],
-					],
-					[
-						'type'    => 'text',
-						'label'   => $this->l('Send after'),
-						'name'    => 'SEND_REVW_REQUEST_DAYS',
-						'hint'    => $this->l('Send request AFTER order is this old (0 = now)'),
-						'suffix'  => $this->l('day(s)'),
-					],
-					[
-						'type'    => 'text',
-						'label'   => $this->l('Send before'),
-						'name'    => 'SEND_REVW_REQUEST_OLD',
-						'hint'    => $this->l('Send request BEFORE order is this old (0 = forever)'),
-						'suffix'  => $this->l('day(s)'),
-					],
-					[
-						'type'     => 'checkbox',
-						'label'    => $this->l('Group access'),
-						'name'     => 'SEND_REVW_REQUEST_GROUP',
-						'hint'     => $this->l('Select the group/s you want to send emails to'),
-						'multiple' => true,
-						'values'   => [
-							'query' => $groups,
-							'id'    => 'id_group',
-							'name'  => 'name',
-						],
-						'expand'   => (count($groups) > 3) ? [
-							'print_total' => count($groups),
-							'default'     => 'show',
-							'show'        => ['text' => $this->l('Show'), 'icon' => 'plus-sign-alt'],
-							'hide'        => ['text' => $this->l('Hide'), 'icon' => 'minus-sign-alt'],
-						] : null,
-					],
-					[
-						'type'    => 'desc',
-						'name'    => '',
-						'text'    => sprintf($this->l('Next process will send: %d e-mail(s)'), $r1),
-					],
-				],
+				'input'  => $inputs,
 				'submit' => [
 					'title' => $this->l('Save'),
 					'class' => 'btn btn-default pull-right',
@@ -547,6 +576,7 @@ class SendReviewRequest extends Module
 		$vars['SEND_REVW_REQUEST_COLUMNS'] = (int) Configuration::get('SEND_REVW_REQUEST_COLUMNS');
 		$vars['SEND_REVW_REQUEST_DAYS'] = (int) Configuration::get('SEND_REVW_REQUEST_DAYS');
 		$vars['SEND_REVW_REQUEST_OLD'] = (int) Configuration::get('SEND_REVW_REQUEST_OLD');
+		$vars['SEND_REVW_REQUEST_ACTION'] = (int) Configuration::get('SEND_REVW_REQUEST_ACTION');
 
 		// Order Status
 		$order_state = explode(',', Configuration::get('SEND_REVW_REQUEST_STATE'));
