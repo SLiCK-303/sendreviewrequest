@@ -287,7 +287,7 @@ class SendReviewRequest extends Module
 				}
 
 				// Trigger the Krona Action
-				if (Module::isEnabled('genzo_krona')) {
+				if (Module::isEnabled('genzo_krona') && Module::isEnabled('revws')) {
 					$gk_params = [
 						'module_name' => 'revws',
 						'action_name' => 'review_created',
