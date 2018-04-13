@@ -358,25 +358,6 @@ class SendReviewRequest extends Module
 		$this->sendReviewRequest();
 	}
 
-	public function renderStats()
-	{
-		$stats = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-			SELECT DATE_FORMAT(date_add, \'%Y-%m-%d\') date_stat, COUNT(id_log_email) nb
-			FROM '._DB_PREFIX_.'log_srr_email
-			WHERE date_add >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-			GROUP BY DATE_FORMAT(date_add, \'%Y-%m-%d\')
-		');
-
-		$stats_array = [];
-		foreach ($stats as $stat) {
-			$stats_array[$stat['date_stat']][1]['nb'] = (int)$stat['nb'];
-		}
-
-		$this->context->smarty->assign(['stats_array' => $stats_array]);
-
-		return $this->display(__FILE__, 'stats.tpl');
-	}
-
 	public function hookHeader()
 	{
 		if(Tools::getValue('id_product')) {
@@ -409,6 +390,25 @@ class SendReviewRequest extends Module
 		}
 	}
 
+	public function renderStats()
+	{
+		$stats = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
+			SELECT DATE_FORMAT(date_add, \'%Y-%m-%d\') date_stat, COUNT(id_log_email) nb
+			FROM '._DB_PREFIX_.'log_srr_email
+			WHERE date_add >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+			GROUP BY DATE_FORMAT(date_add, \'%Y-%m-%d\')
+		');
+
+		$stats_array = [];
+		foreach ($stats as $stat) {
+			$stats_array[$stat['date_stat']][1]['nb'] = (int)$stat['nb'];
+		}
+
+		$this->context->smarty->assign(['stats_array' => $stats_array]);
+
+		return $this->display(__FILE__, 'stats.tpl');
+	}
+
 	public function renderForm()
 	{
 		$r1 = $this->sendReviewRequest(true);
@@ -436,8 +436,8 @@ class SendReviewRequest extends Module
 		$fields_form_1 = [
 			'form' => [
 				'legend' => [
-					'title' => $this->l('Information'),
-					'icon'  => 'icon-cogs',
+					'title' => $this->l('Cron Information'),
+					'icon'  => 'icon-info',
 				],
 				'description' => $cron_info,
 			],
@@ -537,16 +537,11 @@ class SendReviewRequest extends Module
 				],
 			];
 		}
-		$inputs[] = [
-			'type'    => 'desc',
-			'name'    => '',
-			'text'    => sprintf($this->l('Next process will send: %d e-mail(s)'), $r1),
-		];
 
 		$fields_form_2 = [
 			'form' => [
 				'legend' => [
-					'title' => $this->l('E-Mails to send'),
+					'title' => $this->l('Settings'),
 					'icon'  => 'icon-cogs',
 				],
 				'input'  => $inputs,
@@ -554,6 +549,16 @@ class SendReviewRequest extends Module
 					'title' => $this->l('Save'),
 					'class' => 'btn btn-default pull-right',
 				],
+			],
+		];
+
+		$fields_form_3 = [
+			'form' => [
+				'legend' => [
+					'title' => $this->l('E-Mails to send'),
+					'icon'  => 'icon-envelope',
+				],
+				'description' => sprintf($this->l('Next process will send: %d e-mail(s)'), $r1),
 			],
 		];
 
@@ -599,6 +604,7 @@ class SendReviewRequest extends Module
 		return $helper->generateForm([
 			$fields_form_1,
 			$fields_form_2,
+			$fields_form_3,
 		]);
 	}
 
