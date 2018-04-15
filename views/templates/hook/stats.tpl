@@ -31,7 +31,7 @@
 		</tr>
 		{foreachelse}
 			<tr>
-				<td colspan="2" style="font-weight: bold; text-align: center;">{l s='No log information at this time.' mod='sendreviewrequest'}</td>
+				<td colspan="4" style="font-weight: bold;">{l s='No log information at this time.' mod='sendreviewrequest'}</td>
 			</tr>
 		{/foreach}
 	</table>
