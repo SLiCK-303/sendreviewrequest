@@ -23,14 +23,14 @@
 	</ul>
 	<table class="table">
 		<tr>
-			<td width="75px" class="center"><b>{l s="Date" mod='sendreviewrequest'}</b></td>
-			<td width="100%" class="center"><b>{l s="Sent" mod='sendreviewrequest'}</b></td>
+			<th class="center" style="width: 75px;"><b>{l s="Date" mod='sendreviewrequest'}</b></th>
+			<th class="center" style="width: 99%;"><b>{l s="Sent" mod='sendreviewrequest'}</b></th>
 		</tr>
 		{foreach from=$stats_array key='date' item='stats'}
 		<tr>
-			<td width="75px" class="center">{$date|escape:'htmlall':'UTF-8'}</td>
+			<td class="center" style="width: 75px;">{$date|escape:'htmlall':'UTF-8'}</td>
 			{foreach from=$stats key='key' item='val'}
-				<td width="100%" class="center">{$val.nb|escape:'htmlall':'UTF-8'}</td>
+				<td class="center" style="width: 99%;">{$val.nb|escape:'htmlall':'UTF-8'}</td>
 			{/foreach}	
 		</tr>
 		{foreachelse}
