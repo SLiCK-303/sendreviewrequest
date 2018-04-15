@@ -28,7 +28,7 @@
 		</tr>
 		{foreach from=$stats_array key='date' item='stats'}
 		<tr>
-			<td class="center" style="width: 75px;">{$date|escape:'htmlall':'UTF-8'}</td>
+			<td class="center" style="width: 75px; white-space: nowrap;">{$date|escape:'htmlall':'UTF-8'}</td>
 			{foreach from=$stats key='key' item='val'}
 				<td class="center" style="width: 99%;">{$val.nb|escape:'htmlall':'UTF-8'}</td>
 			{/foreach}	

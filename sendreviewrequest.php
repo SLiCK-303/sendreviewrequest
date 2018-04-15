@@ -393,10 +393,10 @@ class SendReviewRequest extends Module
 	public function renderStats()
 	{
 		$stats = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-			SELECT DATE_FORMAT(date_add, \'%Y-%m-%d\') date_stat, COUNT(id_log_email) nb
+			SELECT DATE_FORMAT(date_add, \'%m-%d-%Y\') date_stat, COUNT(id_log_email) nb
 			FROM '._DB_PREFIX_.'log_srr_email
 			WHERE date_add >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-			GROUP BY DATE_FORMAT(date_add, \'%Y-%m-%d\')
+			GROUP BY DATE_FORMAT(date_add, \'%m-%d-%Y\')
 		');
 
 		$stats_array = [];
