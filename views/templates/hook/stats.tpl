@@ -15,18 +15,12 @@
 **}
 
 <div class="panel" id="fieldset_4">
-    <h3><i class="icon-bar-chart"></i> {l s='Logs' mod='sendreviewrequest'}</h3>
+    <h3><i class="icon-clipboard"></i> {l s='Logs' mod='sendreviewrequest'}</h3>
 	<p>{l s='Logs for the last 30 days:' mod='sendreviewrequest'}</p>
-	<ul style="font-size: 10px; font-weight: bold;">
-		<li>{l s='Sent = Number of sent e-mails' mod='sendreviewrequest'}</li>
-	</ul>
 	<table class="table">
 		<tr>
-			<th rowspan="2" style="width: 75px;">{l s='Date' mod='sendreviewrequest'}</th>
-			<th colspan="3">{l s='Customers reviews requests sent' mod='sendreviewrequest'}</th>
-		</tr>
-		<tr>
-			<td class="center">{l s="Sent" mod='sendreviewrequest'}</td>
+			<th style="width: 75px;">{l s='Date' mod='sendreviewrequest'}</th>
+			<th colspan="3" style="text-align: center;">{l s='Review requests sent' mod='sendreviewrequest'}</th>
 		</tr>
 		{foreach from=$stats_array key='date' item='stats'}
 		<tr>
@@ -37,7 +31,7 @@
 		</tr>
 		{foreachelse}
 			<tr>
-				<td colspan="2" style="font-weight: bold; text-align: center;">{l s='No statistics at this time.' mod='sendreviewrequest'}</td>
+				<td colspan="2" style="font-weight: bold; text-align: center;">{l s='No log information at this time.' mod='sendreviewrequest'}</td>
 			</tr>
 		{/foreach}
 	</table>
