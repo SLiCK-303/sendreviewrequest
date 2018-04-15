@@ -23,8 +23,8 @@
 	</ul>
 	<table class="table">
 		<tr>
-			<th class="center" style="width: 75px;"><b>{l s="Date" mod='sendreviewrequest'}</b></th>
-			<th class="center" style="width: 99%;"><b>{l s="Sent" mod='sendreviewrequest'}</b></th>
+			<th class="center" style="width: 75px;">{l s="Date" mod='sendreviewrequest'}</th>
+			<th class="center" style="width: 99%;">{l s="Sent" mod='sendreviewrequest'}</th>
 		</tr>
 		{foreach from=$stats_array key='date' item='stats'}
 		<tr>
