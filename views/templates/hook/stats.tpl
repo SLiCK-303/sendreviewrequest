@@ -17,21 +17,25 @@
 <div class="panel" id="fieldset_4">
     <h3><i class="icon-clipboard"></i> {l s='Logs' mod='sendreviewrequest'}</h3>
 	<p>{l s='Logs for the last 30 days:' mod='sendreviewrequest'}</p>
+	<ul style="font-size: 10px; font-weight: bold;">
+		<li>{l s='Date = Date of sent e-mails' mod='sendreviewrequest'}</li>
+		<li>{l s='Sent = Number of sent e-mails' mod='sendreviewrequest'}</li>
+	</ul>
 	<table class="table">
 		<tr>
-			<th style="width: 75px;">{l s='Date' mod='sendreviewrequest'}</th>
-			<th colspan="3" style="text-align: center;">{l s='Review requests sent' mod='sendreviewrequest'}</th>
+			<td width="75px" class="center"><b>{l s="Date" mod='sendreviewrequest'}</b></td>
+			<td width="100%" class="center"><b>{l s="Sent" mod='sendreviewrequest'}</b></td>
 		</tr>
 		{foreach from=$stats_array key='date' item='stats'}
 		<tr>
-			<td class="center">{$date|escape:'htmlall':'UTF-8'}</td>
+			<td width="75px" class="center">{$date|escape:'htmlall':'UTF-8'}</td>
 			{foreach from=$stats key='key' item='val'}
-				<td class="center">{$val.nb|escape:'htmlall':'UTF-8'}</td>
+				<td width="100%" class="center">{$val.nb|escape:'htmlall':'UTF-8'}</td>
 			{/foreach}	
 		</tr>
 		{foreachelse}
 			<tr>
-				<td colspan="4" style="font-weight: bold;">{l s='No log information at this time.' mod='sendreviewrequest'}</td>
+				<td colspan="2" class="center"><b>{l s='No log information at this time.' mod='sendreviewrequest'}</b></td>
 			</tr>
 		{/foreach}
 	</table>
