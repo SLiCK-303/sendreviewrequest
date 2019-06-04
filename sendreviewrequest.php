@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 SLiCK-303
+ * Copyright (C) 2019 SLiCK-303
  *
  * NOTICE OF LICENSE
  *
@@ -11,7 +11,7 @@
  *
  * @package    sendreviewrequest
  * @author     SLiCK-303 <slick_303@hotmail.com>
- * @copyright  2018 SLiCK-303
+ * @copyright  2019 SLiCK-303
  * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 **/
 
@@ -24,7 +24,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.2.8';
+		$this->version = '3.3.0';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->need_instance = 0;
@@ -54,44 +54,29 @@ class SendReviewRequest extends Module
 
 	public function install()
 	{
-		if (!parent::install() ||
-			!$this->registerHook('header') ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_STATE', '5,4') ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_GROUP', '3') ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', 8) ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', 2) ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_DAYS', 7) ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_OLD', 30) ||
-			!Configuration::updateValue('SEND_REVW_REQUEST_ACTION', 1) ||
-			!Db::getInstance()->execute('
-				CREATE TABLE '._DB_PREFIX_.'log_srr_email (
-				`id_log_email` int(11) NOT NULL AUTO_INCREMENT,
-				`id_customer` int(11) NOT NULL,
-				`id_order` int(11) NOT NULL,
-				`date_add` datetime NOT NULL,
-				PRIMARY KEY (`id_log_email`),
-				INDEX `id_order`(`id_order`),
-				INDEX `date_add`(`date_add`)
-			) ENGINE='._MYSQL_ENGINE_)
-		) {
-			return false;
-		}
-		return true;
+		return (
+			parent::install() &&
+			$this->registerHooks() &&
+			$this->insertConfiguration() &&
+			$this->createTable()
+		);
 	}
 
 	public function uninstall()
 	{
-		foreach ($this->conf_keys as $key) {
-			Configuration::deleteByName($key);
-		}
-
-		Configuration::deleteByName('SEND_REVW_REQUEST_SECURE_KEY');
-
-		$this->unregisterHook('header');
-
-		Db::getInstance()->execute('DROP TABLE '._DB_PREFIX_.'log_srr_email');
-
+		$this->dropTable();
+		$this->deleteConfiguration(true);
+		$this->unregisterHooks();
 		return parent::uninstall();
+	}
+
+	public function reset()
+	{
+		$this->deleteConfiguration(false);
+		$this->unregisterHooks();
+		$this->registerHooks();
+		$this->insertConfiguration();
+		return true;
 	}
 
 	public function getContent()
@@ -190,7 +175,7 @@ class SendReviewRequest extends Module
 	{
 		return $content;
 	}
-	
+
 	private function sendReviewRequest($count = false)
 	{
 		$conf = Configuration::getMultiple([
@@ -232,11 +217,11 @@ class SendReviewRequest extends Module
 		$sql .= Shop::addSqlRestriction(Shop::SHARE_CUSTOMER, 'c');
 
 		if (!empty($days)) {
-			$sql .= ' AND DATE_FORMAT(o.date_upd, \'%Y-%m-%d\') < DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)';
+			$sql .= " AND DATE_FORMAT(o.date_upd, '%Y-%m-%d') < DATE_SUB(CURDATE(), INTERVAL $days DAY)";
 		}
 
 		if (!empty($old)) {
-			$sql .= ' AND DATE_FORMAT(o.date_upd, \'%Y-%m-%d\') > DATE_SUB(CURDATE(), INTERVAL '.$old.' DAY)';
+			$sql .= " AND DATE_FORMAT(o.date_upd, '%Y-%m-%d') > DATE_SUB(CURDATE(), INTERVAL $old DAY)";
 		}
 
 		if (!empty($email_logs)) {
@@ -385,7 +370,7 @@ class SendReviewRequest extends Module
 					})
 				</script>';
 			}
-		
+
 			return $html;
 		}
 	}
@@ -586,13 +571,13 @@ class SendReviewRequest extends Module
 		// Order Status
 		$order_state = explode(',', Configuration::get('SEND_REVW_REQUEST_STATE'));
 		foreach ($order_state as $id) {
-		    $vars['SEND_REVW_REQUEST_STATE_'.$id] = true;
+			$vars['SEND_REVW_REQUEST_STATE_'.$id] = true;
 		}
 
 		// Groups
 		$group = explode(',', Configuration::get('SEND_REVW_REQUEST_GROUP'));
 		foreach ($group as $id) {
-		    $vars['SEND_REVW_REQUEST_GROUP_'.$id] = true;
+			$vars['SEND_REVW_REQUEST_GROUP_'.$id] = true;
 		}
 
 		$helper->tpl_vars = [
@@ -608,4 +593,56 @@ class SendReviewRequest extends Module
 		]);
 	}
 
+	private function registerHooks()
+	{
+		return (
+			$this->registerHook('header')
+		);
+	}
+
+	private function unregisterHooks()
+	{
+		$this->unregisterHook('header');
+	}
+
+	private function insertConfiguration()
+	{
+		return (
+			Configuration::updateValue('SEND_REVW_REQUEST_STATE', '5,4') &&
+			Configuration::updateValue('SEND_REVW_REQUEST_GROUP', '3') &&
+			Configuration::updateValue('SEND_REVW_REQUEST_NUMBER', 8) &&
+			Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', 2) &&
+			Configuration::updateValue('SEND_REVW_REQUEST_DAYS', 7) &&
+			Configuration::updateValue('SEND_REVW_REQUEST_OLD', 30) &&
+			Configuration::updateValue('SEND_REVW_REQUEST_ACTION', 1)
+		);
+	}
+
+	private function deleteConfiguration($all=false)
+	{
+		foreach ($this->conf_keys as $key) {
+			Configuration::deleteByName($key);
+		}
+		if ($all) {
+			Configuration::deleteByName('SEND_REVW_REQUEST_SECURE_KEY');
+		}
+	}
+
+	private function createTable()
+	{
+		return Db::getInstance()->execute('
+			CREATE TABLE '._DB_PREFIX_.'log_srr_email (
+			`id_log_email` int(11) NOT NULL AUTO_INCREMENT,
+			`id_customer` int(11) NOT NULL,
+			`id_order` int(11) NOT NULL,
+			`date_add` datetime NOT NULL,
+			PRIMARY KEY (`id_log_email`),
+			INDEX `id_order`(`id_order`),
+			INDEX `date_add`(`date_add`)
+		) ENGINE='._MYSQL_ENGINE_);
+	}
+
+	private function dropTable() {
+		Db::getInstance()->execute('DROP TABLE '._DB_PREFIX_.'log_srr_email');
+	}
 }
