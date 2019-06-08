@@ -1,4 +1,5 @@
-﻿[{shop_url}] 
+﻿
+[{shop_url}] 
 
 Hallo {firstname} {lastname},
 
@@ -8,6 +9,4 @@ Sobald Sie Ihre Produkte testen konnten, können Sie Kommentare und Bewertungen 
 
 {products}
 
-{shop_name} [{shop_url}] powered by
-thirty bees(tm) [https://thirtybees.com/]
-
+{shop_name} [{shop_url}]

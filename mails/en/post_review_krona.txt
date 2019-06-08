@@ -1,4 +1,5 @@
-﻿[{shop_url}] 
+﻿
+[{shop_url}] 
 
 Hi {firstname} {lastname},
 
@@ -9,6 +10,4 @@ This can be useful to other customers, hearing about your experience.  You will 
 
 {products}
 
-{shop_name} [{shop_url}] powered by
-thirty bees(tm) [https://thirtybees.com/]
-
+{shop_name} [{shop_url}]
