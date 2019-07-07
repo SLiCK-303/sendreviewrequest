@@ -7,12 +7,12 @@
  * This source file is subject to the Academic Free License (AFL 3.0)
  * that is bundled with this package in the file LICENSE.md.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/afl-3.0.php
+ * https://opensource.org/licenses/afl-3.0.php
  *
  * @package    sendreviewrequest
  * @author     SLiCK-303 <slick_303@hotmail.com>
  * @copyright  2019 SLiCK-303
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @license    Academic Free License (AFL 3.0)
 **/
 
 if (!defined('_TB_VERSION_')) {
@@ -24,9 +24,11 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.3.0';
+		$this->version = '3.3.1';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
+		$this->tb_min_version = '1.0.0';
+		$this->tb_versions_compliancy = '> 1.0.0';
 		$this->need_instance = 0;
 
 		$this->conf_keys = [

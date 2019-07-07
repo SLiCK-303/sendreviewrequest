@@ -2,7 +2,7 @@
 <module>
 	<name>sendreviewrequest</name>
 	<displayName><![CDATA[Send Review Request]]></displayName>
-	<version><![CDATA[3.3.0]]></version>
+	<version><![CDATA[3.3.1]]></version>
 	<description><![CDATA[Send a review request after a defined order state.]]></description>
 	<author><![CDATA[SLiCK-303]]></author>
 	<tab><![CDATA[emailing]]></tab>
