@@ -210,7 +210,7 @@ class SendReviewRequest extends Module
 		$email_logs = $this->getLogsEmail();
 
 		$sql = '
-			SELECT c.id_customer, c.id_shop, c.id_lang, c.firstname, c.lastname, c.email, o.id_order, o.current_state
+			SELECT c.id_customer, c.id_shop, c.id_lang, c.firstname, c.lastname, c.email, c.newsletter, o.id_order, o.current_state
 			FROM '._DB_PREFIX_.'customer c
 			LEFT JOIN '._DB_PREFIX_.'customer_group cg ON c.id_customer = cg.id_customer
 			LEFT JOIN '._DB_PREFIX_.'orders o ON c.id_customer = o.id_customer
