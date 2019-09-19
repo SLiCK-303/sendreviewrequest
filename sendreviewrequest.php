@@ -24,7 +24,7 @@ class SendReviewRequest extends Module
 	public function __construct()
 	{
 		$this->name = 'sendreviewrequest';
-		$this->version = '3.3.1';
+		$this->version = '3.3.2';
 		$this->author = 'SLiCK-303';
 		$this->tab = 'emailing';
 		$this->tb_min_version = '1.0.0';
@@ -39,6 +39,7 @@ class SendReviewRequest extends Module
 			'SEND_REVW_REQUEST_DAYS',
 			'SEND_REVW_REQUEST_OLD',
 			'SEND_REVW_REQUEST_ACTION',
+			'SEND_REVW_REQUEST_NEWS'
 		];
 
 		$this->bootstrap = true;
@@ -188,6 +189,7 @@ class SendReviewRequest extends Module
 			'SEND_REVW_REQUEST_DAYS',
 			'SEND_REVW_REQUEST_OLD',
 			'SEND_REVW_REQUEST_ACTION',
+			'SEND_REVW_REQUEST_NEWS'
 		]);
 
 		$order_state = implode(',', (array) $conf['SEND_REVW_REQUEST_STATE']);
@@ -197,6 +199,7 @@ class SendReviewRequest extends Module
 		$days = (int) $conf['SEND_REVW_REQUEST_DAYS'];
 		$old = (int) $conf['SEND_REVW_REQUEST_OLD'];
 		$revws_act = (int) $conf['SEND_REVW_REQUEST_ACTION'];
+		$newsletter = (int) $conf['SEND_REVW_REQUEST_NEWS'];
 		if ($revws_act == 1) {
 			$revws_action = 'review_created';
 		} else {
@@ -224,6 +227,10 @@ class SendReviewRequest extends Module
 
 		if (!empty($old)) {
 			$sql .= " AND DATE_FORMAT(o.date_upd, '%Y-%m-%d') > DATE_SUB(CURDATE(), INTERVAL $old DAY)";
+		}
+
+		if ($newsletter == 1) {
+			$sql .= ' AND c.newsletter = 1';
 		}
 
 		if (!empty($email_logs)) {
@@ -504,6 +511,24 @@ class SendReviewRequest extends Module
 				'hide'        => ['text' => $this->l('Hide'), 'icon' => 'minus-sign-alt'],
 			] : null,
 		];
+		$inputs[] = [
+			'type'    => 'switch',
+			'label'   => $this->l('Newsletter subscription'),
+			'name'    => 'SEND_REVW_REQUEST_NEWS',
+			'hint'    => $this->l('Send emails to newletter subscribers only'),
+			'values'  => [
+				[
+					'id'      => 'active_on',
+					'value'   => 1,
+					'label'   => $this->l('Yes'),
+				],
+				[
+					'id'      => 'active_off',
+					'value'   => 0,
+					'label'   => $this->l('No'),
+				],
+			],
+		];
 		if (Module::isEnabled('genzo_krona') && Module::isEnabled('revws')) {
 			$inputs[] = [
 				'type'    => 'radio',
@@ -569,6 +594,7 @@ class SendReviewRequest extends Module
 		$vars['SEND_REVW_REQUEST_DAYS'] = (int) Configuration::get('SEND_REVW_REQUEST_DAYS');
 		$vars['SEND_REVW_REQUEST_OLD'] = (int) Configuration::get('SEND_REVW_REQUEST_OLD');
 		$vars['SEND_REVW_REQUEST_ACTION'] = (int) Configuration::get('SEND_REVW_REQUEST_ACTION');
+		$vars['SEND_REVW_REQUEST_NEWS'] = (int) Configuration::get('SEND_REVW_REQUEST_NEWS');
 
 		// Order Status
 		$order_state = explode(',', Configuration::get('SEND_REVW_REQUEST_STATE'));
@@ -616,7 +642,8 @@ class SendReviewRequest extends Module
 			Configuration::updateValue('SEND_REVW_REQUEST_COLUMNS', 2) &&
 			Configuration::updateValue('SEND_REVW_REQUEST_DAYS', 7) &&
 			Configuration::updateValue('SEND_REVW_REQUEST_OLD', 30) &&
-			Configuration::updateValue('SEND_REVW_REQUEST_ACTION', 1)
+			Configuration::updateValue('SEND_REVW_REQUEST_ACTION', 1) &&
+			Configuration::updateValue('SEND_REVW_REQUEST_NEWS', 1)
 		);
 	}
 

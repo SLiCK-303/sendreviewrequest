@@ -7,7 +7,7 @@ tags:
   - review
   - request
   - send request
-description_short: The module send review request will send an email, after a person buys a product, asking for a review.
+description_short: The module Send Review Request will send an email, after a person buys a product, asking for a review.
 description: description.md
 images:
   - image-1.png

@@ -27,6 +27,10 @@ $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_5cbca907d5419f002f5bd
 $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_bb0a2203f75d4923cb393ae82e85ff3c'] = 'Bewertungsanfrage älterer Bestellungen senden mit max Zeitraum (0 = immer)';
 $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_920bd1fb6d54c93fca528ce941464225'] = 'Gruppeneinstellungen:';
 $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_acc6c7181d523da207c450ab7985d488'] = 'Wählen Sie die Gruppe(n) aus, an die Sie E-Mails senden möchten';
+$_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_7bf7f18afabb5122fa68fbab617e509b'] = 'Newsletter subscription';
+$_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_07290f1b85ae96410a8dbf96f006af8e'] = 'Send emails to newletter subscribers only';
+$_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_93cba07454f06a4a960172bbd6e2a435'] = 'Yes';
+$_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_bafd7322c6e97d25b6299b5d6fe8920b'] = 'No';
 $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_9b3015de76519ac4126b0214819b7f2a'] = 'Krona Modul Einstellungen für Bewertung REVWS Modul';
 $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_a69e35f9e9f418370dbf019c871cc405'] = 'Wählen Sie aus, welche Revws-Aktion für das Krona Modul verwendet werden soll';
 $_MODULE['<{sendreviewrequest}prestashop>sendreviewrequest_f580fe9e5706d2bb634dc973d1aaf74a'] = 'review_created';
